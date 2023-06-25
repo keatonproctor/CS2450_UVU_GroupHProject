@@ -1,17 +1,3 @@
-
-public class ProcessorMain {
-
-	public static void main(String[] args) {
-		System.out.print("RUNNING PROCESSORMAIN");
-
-	}
-
-}
-
-
-// H-bot's test commit //
-/*	H-bot's rough draft idea of the program */
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -20,6 +6,7 @@ public class UVSim {
     private int[] memory;
     private int accumulator;
     private boolean isHalted;
+    private int instructionPointer = 0;
 
     public UVSim() {
         memory = new int[100];
@@ -37,7 +24,6 @@ public class UVSim {
     }
 
     public void runProgram() {
-        int instructionPointer = 0;
 
         while (!isHalted && instructionPointer < 100) {
             int instruction = memory[instructionPointer];
