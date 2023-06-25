@@ -1,12 +1,14 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class UVSim {
-    private int[] memory;
+    public static final int HALT_INSTRUCTION = 43;
+	private int[] memory;
     private int accumulator;
     private boolean isHalted;
-    private int instructionPointer = 0;
+	private int instructionPointer = 0;
 
     public UVSim() {
         memory = new int[100];
@@ -31,6 +33,8 @@ public class UVSim {
             int operand = instruction % 100;
 
             switch (opcode) {
+            	case 00: 
+            		break;
                 case 10:
                     read(operand);
                     break;
@@ -82,39 +86,39 @@ public class UVSim {
     
     //Idea for I/O operation://
 
-    private void read(int location) {
+    void read(int location) {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter a value: ");
         int value = scanner.nextInt();
         memory[location] = value;
     }
 
-    private void write(int location) {
+    void write(int location) {
         System.out.println("Output: " + memory[location]);
     }
 
     
     //Idea for Load/store operations://
     
-    private void load(int location) {
+    void load(int location) {
         accumulator = memory[location];
     }
 
-    private void store(int location) {
+    void store(int location) {
         memory[location] = accumulator;
     }
     
     //Idea for Arithmetic operation://
 
-    private void add(int location) {
+    void add(int location) {
         accumulator += memory[location];
     }
 
-    private void subtract(int location) {
+    void subtract(int location) {
         accumulator -= memory[location];
     }
 
-    private void divide(int location) {
+    void divide(int location) {
         int value = memory[location];
         if (value != 0) {
             accumulator /= value;
@@ -124,14 +128,14 @@ public class UVSim {
         }
     }
 
-    private void multiply(int location) {
+    void multiply(int location) {
         accumulator *= memory[location];
     }
     
     
     //Idea for Control operation://
 
-    private void branch(int location) {
+    void branch(int location) {
         if (location >= 0 && location < 100) {
             instructionPointer = location;
         } else {
@@ -140,48 +144,28 @@ public class UVSim {
         }
     }
 
-    private void branchNeg(int location) {
+    void branchNeg(int location) {
         if (accumulator < 0) {
             branch(location);
         }
     }
 
-    private void branchZero(int location) {
+    void branchZero(int location) {
         if (accumulator == 0) {
             branch(location);
         }
     }
 
-    private void halt() {
+    void halt() {
         isHalted = true;
     }
 
-    
-    //Idea for main function//
-    
-    public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("Please provide the input file path.");
-            return;
-        }
-
-        String filePath = args[0];
-        UVSim simulator = new UVSim();
-
-        try {
-            int[] program = readProgramFromFile(filePath);
-            simulator.loadProgram(program);
-            simulator.runProgram();
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + filePath);
-        }
-    }
-    
+   
     //Idea to read a program from a txt file//
 
-    private static int[] readProgramFromFile(String filePath) throws FileNotFoundException {
-        File file = new File(filePath);
-        Scanner scanner = new Scanner(file);
+    int[] readProgramFromFile(File inputFile) throws FileNotFoundException {
+    	   
+        Scanner scanner = new Scanner(inputFile);
 
         int[] program = new int[100];
         int index = 0;
@@ -200,4 +184,28 @@ public class UVSim {
         scanner.close();
         return program;
     }
+    
+    int[] getMemory() {
+    	return memory;
+    }
+    
+    void setAccumulator(int accumulatorValue) {
+    	accumulator = accumulatorValue;
+    }
+
+	int getAccumulator() {
+		return accumulator;
+	}
+
+	void setProgramCounter(int location) {
+		instructionPointer = 0;
+	}
+
+	int getProgramCounter() {
+		return instructionPointer;
+	}
+	
+	String setFileName(String fileNameString) {
+		return fileNameString;
+	}
 }
