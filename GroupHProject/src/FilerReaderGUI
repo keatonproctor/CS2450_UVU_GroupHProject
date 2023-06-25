@@ -7,11 +7,15 @@ import java.awt.event.KeyEvent;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
 public class FileReaderGUI extends JFrame {
-    private JLabel fileLabel;
+	
+    private static final long serialVersionUID = 1L;
+	private JLabel fileLabel;
     private JLabel validationStatusLabel;
     private JTextField patternTextField;
     private JTextField inputTextField;
@@ -19,14 +23,18 @@ public class FileReaderGUI extends JFrame {
     private JButton runButton; // Run button instance variable
     private JLabel accumulatorLabel; // Accumulator label
     private int accumulatorValue = 0; // Accumulator value
-
+    public File inputFile;
+    private UVSim simInstance;
+    public JPanel mainPanel;
+    public JPanel inputPanel;
+    
     public FileReaderGUI() {
         setTitle("UV Sim");
         setSize(400, 200);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel();
+        mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
         JPanel filePanel = new JPanel();
@@ -68,7 +76,8 @@ public class FileReaderGUI extends JFrame {
                 fileChooser.addChoosableFileFilter(new javax.swing.filechooser.FileFilter() {
                     @Override
                     public boolean accept(java.io.File f) {
-                        return f.getName().toLowerCase().endsWith(".txt") || f.isDirectory();
+                    	inputFile = f;
+                    	return f.getName().toLowerCase().endsWith(".txt") || f.isDirectory();
                     }
 
                     @Override
@@ -107,7 +116,7 @@ public class FileReaderGUI extends JFrame {
         validationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         validationPanel.add(validationStatusLabel);
 
-        JPanel inputPanel = new JPanel();
+        inputPanel = new JPanel();
         inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         inputPanel.add(new JLabel("Input Text:"));
         inputPanel.add(inputTextField);
@@ -135,8 +144,20 @@ public class FileReaderGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 // Perform the processing logic here
                 JOptionPane.showMessageDialog(FileReaderGUI.this, "Processing the request...");
-                accumulatorValue++; // Update the accumulator value
-                accumulatorLabel.setText("Accumulator: " + accumulatorValue); // Update the accumulator label
+                //accumulatorValue++; // Update the accumulator value
+                simInstance = new UVSim();
+               
+                try {
+					int[] simProgram = simInstance.readProgramFromFile(inputFile);
+					runSimulator(simProgram);
+				} catch (FileNotFoundException e1) {
+					System.out.println("File not found: " + inputFile);
+					e1.printStackTrace();
+				}
+                
+                
+                
+                //accumulatorLabel.setText("Accumulator: " + accumulatorValue); // Update the accumulator label
             }
         });
         runButton.setEnabled(false); // Disable the "Run" button initially
@@ -160,6 +181,13 @@ public class FileReaderGUI extends JFrame {
         mainPanel.add(exitPanel, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
+    }
+    
+    public void runSimulator(int[] simProgram) {
+    	
+    	simInstance.loadProgram(simProgram);
+		simInstance.runProgram();
+		
     }
 
     private boolean validateFile(java.io.File file) {
@@ -197,13 +225,23 @@ public class FileReaderGUI extends JFrame {
         // Enable or disable the "Run" button based on the validation flag
         runButton.setEnabled(bValidate);
     }
+    
+    public UVSim getSimulator() {
+    	return simInstance;
+    }
+    
+    public JPanel getMainPanel() {
+    	return mainPanel;
+    }
 
-    public static void main(String[] args) {
+    public static void main(String[] args){
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 FileReaderGUI app = new FileReaderGUI();
                 app.setVisible(true);
             }
         });
+        
+        
     }
 }
