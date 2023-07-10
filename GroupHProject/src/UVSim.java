@@ -5,10 +5,10 @@ import java.util.Scanner;
 
 public class UVSim {
     public static final int HALT_INSTRUCTION = 43;
-	private int[] memory;
+    private int[] memory;
     private int accumulator;
     private boolean isHalted;
-	private int instructionPointer = 0;
+    private int instructionPointer = 0;
 
     public UVSim() {
         memory = new int[100];
@@ -33,8 +33,6 @@ public class UVSim {
             int operand = instruction % 100;
 
             switch (opcode) {
-            	case 00: 
-            		break;
                 case 10:
                     read(operand);
                     break;
@@ -83,23 +81,19 @@ public class UVSim {
             System.out.println("Program reached the end without a halt instruction.");
         }
     }
-    
-    //Idea for I/O operation://
 
+    // I/O operation:
     void read(int location) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter a value: ");
-        int value = scanner.nextInt();
-        memory[location] = value;
+            Scanner scanner = new Scanner(System.in);
+            int value = scanner.nextInt();
+            memory[location] = value;
     }
 
     void write(int location) {
         System.out.println("Output: " + memory[location]);
     }
 
-    
-    //Idea for Load/store operations://
-    
+    // Load/store operations:
     void load(int location) {
         accumulator = memory[location];
     }
@@ -107,9 +101,8 @@ public class UVSim {
     void store(int location) {
         memory[location] = accumulator;
     }
-    
-    //Idea for Arithmetic operation://
 
+    // Arithmetic operations:
     void add(int location) {
         accumulator += memory[location];
     }
@@ -131,10 +124,8 @@ public class UVSim {
     void multiply(int location) {
         accumulator *= memory[location];
     }
-    
-    
-    //Idea for Control operation://
 
+    // Control operations:
     void branch(int location) {
         if (location >= 0 && location < 100) {
             instructionPointer = location;
@@ -160,11 +151,8 @@ public class UVSim {
         isHalted = true;
     }
 
-   
-    //Idea to read a program from a txt file//
-
+    // Read a program from a txt file
     int[] readProgramFromFile(File inputFile) throws FileNotFoundException {
-    	   
         Scanner scanner = new Scanner(inputFile);
 
         int[] program = new int[100];
@@ -184,28 +172,24 @@ public class UVSim {
         scanner.close();
         return program;
     }
-    
+
     int[] getMemory() {
-    	return memory;
+        return memory;
     }
-    
+
+    int getAccumulator() {
+        return accumulator;
+    }
+
     void setAccumulator(int accumulatorValue) {
-    	accumulator = accumulatorValue;
+        accumulator = accumulatorValue;
     }
 
-	int getAccumulator() {
-		return accumulator;
-	}
+    void setProgramCounter(int location) {
+        instructionPointer = location;
+    }
 
-	void setProgramCounter(int location) {
-		instructionPointer = 0;
-	}
-
-	int getProgramCounter() {
-		return instructionPointer;
-	}
-	
-	String setFileName(String fileNameString) {
-		return fileNameString;
-	}
+    int getProgramCounter() {
+        return instructionPointer;
+    }
 }
