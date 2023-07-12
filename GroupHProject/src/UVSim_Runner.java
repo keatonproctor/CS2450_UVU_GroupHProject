@@ -1,5 +1,4 @@
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 public class UVSim_Runner {
 
@@ -8,7 +7,7 @@ public class UVSim_Runner {
         boolean fileNotSelected = true; // Should be turned to false when file has been validated by gui
         FileReaderGUI guiWindow = new FileReaderGUI(); //
 
-        guiWindow.runGUI(); // 'initialize' / start gui window
+        FileReaderGUI.runGUI(); // 'initialize' / start gui window
 
         UVSim simInstance = new UVSim(); // initialize, but don't run program. Running it prematurely without the file will result in nullPointereException in UVSim
 
