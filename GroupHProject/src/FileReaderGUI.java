@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -23,7 +22,6 @@ public class FileReaderGUI extends JFrame {
     private JButton runButton; // Run button instance variable
     private JLabel accumulatorLabel; // Accumulator label
     private int accumulatorValue = 0; // Accumulator value
-    private File inputFile;
     private JPanel mainPanel;
     private File selectedFile;
     private JPanel inputPanel;
