@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class UVSim {
@@ -84,9 +83,10 @@ public class UVSim {
 
     // I/O operation:
     void read(int location) {
-            Scanner scanner = new Scanner(System.in);
-            int value = scanner.nextInt();
-            memory[location] = value;
+            try (Scanner scanner = new Scanner(System.in)) {
+				int value = scanner.nextInt();
+				memory[location] = value;
+			}
     }
 
     void write(int location) {
