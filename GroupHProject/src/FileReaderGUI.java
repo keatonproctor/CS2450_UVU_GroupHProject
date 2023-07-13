@@ -1,48 +1,40 @@
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileReaderGUI extends JFrame {
 
-    private static final long serialVersionUID = 1L;
     private JLabel fileLabel;
     private JLabel validationStatusLabel;
     private JTextField patternTextField;
     private JTextField inputTextField;
-    private boolean bValidate = false; // Validation flag
-    private JButton runButton; // Run button instance variable
-    private JLabel accumulatorLabel; // Accumulator label
-    private int accumulatorValue = 0; // Accumulator value
-    private JPanel mainPanel;
+    private JButton runButton;
+    private JButton addButton;
+    private JButton modifyButton;
+    private JButton deleteButton;
+    private JTextArea commandTextArea;
+    private UVSim simulator;
+    private JList<String> commandList;
+    private DefaultListModel<String> commandListModel;
+    private boolean bValidate = false;
     private File selectedFile;
-    private JPanel inputPanel;
     private boolean fileNotInitialized = true;
+
     public FileReaderGUI() {
-
-        // Basic Window information
-
-        //System.out.println("Running GUI Constructor");
-
-        setTitle("UV Sim"); //
-        setSize(400, 200);
+        setTitle("UV Sim");
+        setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-
-        JPanel filePanel = new JPanel();
-        filePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JPanel mainPanel = new JPanel(new BorderLayout());
 
         fileLabel = new JLabel();
 
@@ -51,11 +43,11 @@ public class FileReaderGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String input = patternTextField.getText().trim();
-                bValidate = validatePattern(input); // Update validation flag
+                bValidate = validatePattern(input);
                 if (!bValidate) {
                     JOptionPane.showMessageDialog(FileReaderGUI.this, "Invalid input! Please follow the pattern (+ or - followed by a max of 5 numbers).", "Error", JOptionPane.ERROR_MESSAGE);
                 }
-                updateRunButtonState(); // Update "Run" button state
+                updateRunButtonState();
             }
         });
 
@@ -97,14 +89,15 @@ public class FileReaderGUI extends JFrame {
                         fileLabel.setText(selectedFile.getName());
 
                         validationStatusLabel.setText("File validation successful.");
-                        bValidate = true; // Set validation flag to true
-                        updateRunButtonState(); // Update "Run" button state
+                        bValidate = true;
+                        updateRunButtonState();
+                        displayCommandsFromFile(selectedFile);
                     } else {
                         JOptionPane.showMessageDialog(FileReaderGUI.this, "File validation failed.", "Error", JOptionPane.ERROR_MESSAGE);
                         fileLabel.setText("");
                         validationStatusLabel.setText("");
-                        bValidate = false; // Set validation flag to false
-                        updateRunButtonState(); // Update "Run" button state
+                        bValidate = false;
+                        updateRunButtonState();
                     }
                 }
             }
@@ -116,43 +109,77 @@ public class FileReaderGUI extends JFrame {
         buttonPanel.add(chooseFileButton, BorderLayout.WEST);
         buttonPanel.add(fileLabel, BorderLayout.CENTER);
 
-        JPanel validationPanel = new JPanel();
-        validationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JPanel validationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         validationPanel.add(validationStatusLabel);
 
-        inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JPanel centerPanel = new JPanel(new BorderLayout());
+
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         inputPanel.add(new JLabel("Input Text:"));
         inputPanel.add(inputTextField);
 
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BorderLayout());
+        JPanel commandPanel = new JPanel(new BorderLayout());
 
-        JPanel orPanel = new JPanel(new BorderLayout());
-        JLabel orLabel = new JLabel("or");
-        orLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        orPanel.add(orLabel, BorderLayout.NORTH);
+        commandListModel = new DefaultListModel<>();
+        commandList = new JList<>(commandListModel);
+        commandList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        commandList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                updateCommandButtonsState();
+            }
+        });
+        JScrollPane commandScrollPane = new JScrollPane(commandList);
 
-        JPanel accumulatorPanel = new JPanel();
-        accumulatorPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        accumulatorLabel = new JLabel("Accumulator: " + accumulatorValue);
-        accumulatorPanel.add(accumulatorLabel);
+        JPanel commandButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        addButton = new JButton("Add");
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addCommand();
+            }
+        });
 
-        centerPanel.add(orPanel, BorderLayout.NORTH);
-        centerPanel.add(inputPanel, BorderLayout.CENTER);
-        centerPanel.add(accumulatorPanel, BorderLayout.SOUTH);
+        modifyButton = new JButton("Modify");
+        modifyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                modifyCommand();
+            }
+        });
+        modifyButton.setEnabled(false);
+
+        deleteButton = new JButton("Delete");
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deleteCommand();
+            }
+        });
+        deleteButton.setEnabled(false);
+
+        commandButtonPanel.add(addButton);
+        commandButtonPanel.add(modifyButton);
+        commandButtonPanel.add(deleteButton);
+
+        commandPanel.add(commandScrollPane, BorderLayout.CENTER);
+        commandPanel.add(commandButtonPanel, BorderLayout.SOUTH);
+
+        commandTextArea = new JTextArea(10, 30);
+        commandTextArea.setEditable(false);
+        JScrollPane textAreaScrollPane = new JScrollPane(commandTextArea);
+
+        centerPanel.add(inputPanel, BorderLayout.NORTH);
+        centerPanel.add(commandPanel, BorderLayout.WEST);
+        centerPanel.add(textAreaScrollPane, BorderLayout.CENTER);
 
         runButton = new JButton("Run");
         runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Perform the processing logic here
-                fileNotInitialized = false;
-                JOptionPane.showMessageDialog(FileReaderGUI.this, "Processing the request...");
-
+                executeProgram();
             }
         });
-        runButton.setEnabled(false); // Disable the "Run" button initially
 
         JButton exitButton = new JButton("Exit");
         exitButton.addActionListener(new ActionListener() {
@@ -162,15 +189,15 @@ public class FileReaderGUI extends JFrame {
             }
         });
 
-        JPanel exitPanel = new JPanel(new BorderLayout());
-        exitPanel.add(exitButton, BorderLayout.EAST);
-        exitPanel.add(runButton, BorderLayout.WEST);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomPanel.add(runButton);
+        bottomPanel.add(exitButton);
 
         mainPanel.add(buttonPanel, BorderLayout.NORTH);
         mainPanel.add(validationPanel, BorderLayout.CENTER);
         mainPanel.add(centerPanel, BorderLayout.CENTER);
         mainPanel.add(patternTextField, BorderLayout.SOUTH);
-        mainPanel.add(exitPanel, BorderLayout.SOUTH);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
     }
@@ -194,40 +221,113 @@ public class FileReaderGUI extends JFrame {
 
     private boolean validatePattern(String input) {
         String pattern = "[+-]\\d{1,5}";
-        Pattern regex = Pattern.compile(pattern);
-        Matcher matcher = regex.matcher(input);
-        return matcher.matches();
+        return input.matches(pattern);
     }
 
     private boolean validateLine(String line) {
         String pattern = "[+-]\\d{1,5}";
-        Pattern regex = Pattern.compile(pattern);
-        Matcher matcher = regex.matcher(line);
-        return matcher.matches();
+        return line.matches(pattern);
     }
 
     public void updateRunButtonState() {
-        // Enable or disable the "Run" button based on the validation flag
         runButton.setEnabled(bValidate);
     }
 
-//    public UVSim getSimulator() {
-//        return simInstance;
-//    }
+    public void setSimulator(UVSim simulator) {
+        this.simulator = simulator;
+    }
+
+    public void displayCommandsFromFile(File file) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            commandListModel.clear();
+            while ((line = br.readLine()) != null) {
+                commandListModel.addElement(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateCommandTextArea() {
+        int selectedIndex = commandList.getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < commandListModel.size()) {
+            String command = commandListModel.getElementAt(selectedIndex);
+            commandTextArea.setText(command);
+        } else {
+            commandTextArea.setText("");
+        }
+    }
+
+    private void updateCommandButtonsState() {
+        int selectedIndex = commandList.getSelectedIndex();
+        boolean isValidIndex = selectedIndex >= 0 && selectedIndex < commandListModel.size();
+        modifyButton.setEnabled(isValidIndex);
+        deleteButton.setEnabled(isValidIndex);
+    }
+
+    private void addCommand() {
+        int selectedIndex = commandList.getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < commandListModel.size()) {
+            String instruction = promptForInstruction();
+            if (instruction != null) {
+                commandListModel.add(selectedIndex + 1, instruction);
+                updateCommandTextArea();
+            }
+        }
+    }
+
+    private void modifyCommand() {
+        int selectedIndex = commandList.getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < commandListModel.size()) {
+            String instruction = promptForInstruction();
+            if (instruction != null) {
+                commandListModel.set(selectedIndex, instruction);
+                updateCommandTextArea();
+            }
+        }
+    }
+
+    private void deleteCommand() {
+        int selectedIndex = commandList.getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < commandListModel.size()) {
+            commandListModel.remove(selectedIndex);
+            updateCommandTextArea();
+        }
+    }
+
+    private String promptForInstruction() {
+        return JOptionPane.showInputDialog(FileReaderGUI.this, "Enter the instruction:", "Modify Instruction", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    private void executeProgram() {
+        List<Integer> program = new ArrayList<>();
+        for (int i = 0; i < commandListModel.size(); i++) {
+            String instruction = commandListModel.get(i);
+            try {
+                int value = Integer.parseInt(instruction);
+                program.add(value);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid instruction: " + instruction);
+            }
+        }
+        int[] programArray = new int[UVSim.HALT_INSTRUCTION];
+        for (int i = 0; i < program.size(); i++) {
+            programArray[i] = program.get(i);
+        }
+        simulator.loadProgram(programArray);
+        simulator.runProgram();
+    }
 
     public File getProgramFile() {
         return selectedFile;
     }
 
     public boolean isFileNotInitialized() {
-        System.out.println(fileNotInitialized);
         return fileNotInitialized;
     }
 
     public static void runGUI() {
-
-        // Moved the gui run() method from main() into runGUI() to be able to control it from UV_Sim_Runner
-
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 FileReaderGUI app = new FileReaderGUI();
@@ -237,6 +337,9 @@ public class FileReaderGUI extends JFrame {
     }
 
     public static void main(String[] args) {
-
+        UVSim simulator = new UVSim();
+        FileReaderGUI gui = new FileReaderGUI();
+        gui.setSimulator(simulator);
+        FileReaderGUI.runGUI();
     }
 }
