@@ -27,6 +27,27 @@ public class FileReaderGUI extends JFrame {
     private boolean bValidate = false;
     private File selectedFile;
     private boolean fileNotInitialized = true;
+    private Color primaryColor;
+    private Color offColor;
+    private JPanel mainPanel;
+    private JPanel buttonPanel;
+    private JPanel validationPanel;
+    private JPanel centerPanel;
+    private JPanel inputPanel;
+    private JPanel commandPanel;
+    private JPanel commandButtonPanel;
+    private JPanel bottomPanel;
+
+    private static final Color UVU_DARK_GREEN = new Color(76, 114, 29);
+    private static final Color WHITE = Color.WHITE;
+    private static final Color PURPLE = new Color(128, 0, 128);
+
+    private static final ColorScheme[] COLOR_SCHEMES = {
+            new ColorScheme("UVU", UVU_DARK_GREEN, WHITE),
+            new ColorScheme("Red", Color.RED, WHITE),
+            new ColorScheme("Blue", Color.BLUE, WHITE),
+            new ColorScheme("Purple", PURPLE, WHITE),
+    };
 
     public FileReaderGUI() {
         setTitle("UV Sim");
@@ -34,7 +55,7 @@ public class FileReaderGUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout());
 
         fileLabel = new JLabel();
 
@@ -105,20 +126,20 @@ public class FileReaderGUI extends JFrame {
 
         validationStatusLabel = new JLabel();
 
-        JPanel buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.add(chooseFileButton, BorderLayout.WEST);
         buttonPanel.add(fileLabel, BorderLayout.CENTER);
 
-        JPanel validationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        validationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         validationPanel.add(validationStatusLabel);
 
-        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel = new JPanel(new BorderLayout());
 
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         inputPanel.add(new JLabel("Input Text:"));
         inputPanel.add(inputTextField);
 
-        JPanel commandPanel = new JPanel(new BorderLayout());
+        commandPanel = new JPanel(new BorderLayout());
 
         commandListModel = new DefaultListModel<>();
         commandList = new JList<>(commandListModel);
@@ -131,7 +152,7 @@ public class FileReaderGUI extends JFrame {
         });
         JScrollPane commandScrollPane = new JScrollPane(commandList);
 
-        JPanel commandButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        commandButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addButton = new JButton("Add");
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -189,7 +210,7 @@ public class FileReaderGUI extends JFrame {
             }
         });
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bottomPanel.add(runButton);
         bottomPanel.add(exitButton);
 
@@ -327,10 +348,71 @@ public class FileReaderGUI extends JFrame {
         return fileNotInitialized;
     }
 
+    private void updateColorScheme(Color primaryColor, Color offColor) {
+        mainPanel.setBackground(primaryColor);
+        buttonPanel.setBackground(primaryColor);
+        validationPanel.setBackground(primaryColor);
+        centerPanel.setBackground(primaryColor);
+        inputPanel.setBackground(primaryColor);
+        commandPanel.setBackground(primaryColor);
+        commandButtonPanel.setBackground(primaryColor);
+        bottomPanel.setBackground(primaryColor);
+
+        addButton.setBackground(offColor);
+        modifyButton.setBackground(offColor);
+        deleteButton.setBackground(offColor);
+        runButton.setBackground(offColor);
+        fileLabel.setForeground(offColor);
+        validationStatusLabel.setForeground(offColor);
+        inputTextField.setBackground(offColor);
+        commandList.setBackground(offColor);
+        commandTextArea.setBackground(offColor);
+    }
+
+    private void applyColorScheme(ColorScheme colorScheme) {
+        primaryColor = colorScheme.getPrimaryColor();
+        offColor = colorScheme.getOffColor();
+        updateColorScheme(primaryColor, offColor);
+    }
+
+    private void createColorSchemeMenu(JMenu menu) {
+        ButtonGroup group = new ButtonGroup();
+        ActionListener listener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String command = e.getActionCommand();
+                int index = Integer.parseInt(command);
+                applyColorScheme(COLOR_SCHEMES[index]);
+            }
+        };
+        for (int i = 0; i < COLOR_SCHEMES.length; i++) {
+            JRadioButtonMenuItem item = new JRadioButtonMenuItem(COLOR_SCHEMES[i].getName());
+            item.setActionCommand(String.valueOf(i));
+            item.addActionListener(listener);
+            group.add(item);
+            menu.add(item);
+            if (COLOR_SCHEMES[i].getName().equals("UVU")) {
+                item.setSelected(true);
+                applyColorScheme(COLOR_SCHEMES[i]);
+            }
+        }
+    }
+
+    private void createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu optionsMenu = new JMenu("Options");
+        JMenu colorSchemeMenu = new JMenu("Color Scheme");
+        createColorSchemeMenu(colorSchemeMenu);
+        optionsMenu.add(colorSchemeMenu);
+        menuBar.add(optionsMenu);
+        setJMenuBar(menuBar);
+    }
+
     public static void runGUI() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 FileReaderGUI app = new FileReaderGUI();
+                app.createMenuBar();
                 app.setVisible(true);
             }
         });
@@ -341,5 +423,29 @@ public class FileReaderGUI extends JFrame {
         FileReaderGUI gui = new FileReaderGUI();
         gui.setSimulator(simulator);
         FileReaderGUI.runGUI();
+    }
+}
+
+class ColorScheme {
+    private String name;
+    private Color primaryColor;
+    private Color offColor;
+
+    public ColorScheme(String name, Color primaryColor, Color offColor) {
+        this.name = name;
+        this.primaryColor = primaryColor;
+        this.offColor = offColor;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Color getPrimaryColor() {
+        return primaryColor;
+    }
+
+    public Color getOffColor() {
+        return offColor;
     }
 }
