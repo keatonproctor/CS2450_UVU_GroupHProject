@@ -4,13 +4,15 @@ import java.util.Scanner;
 
 public class UVSim {
     public static final int HALT_INSTRUCTION = 43;
-    private int[] memory;
+    private int[] oldMemory; // For 4-digit instructions
+    private int[] newMemory; // For 6-digit instructions
     private int accumulator;
     private boolean isHalted;
     private int instructionPointer = 0;
 
     public UVSim() {
-        memory = new int[100];
+        oldMemory = new int[100];
+        newMemory = new int[100];
         accumulator = 0;
         isHalted = false;
     }
@@ -21,13 +23,18 @@ public class UVSim {
             return;
         }
 
-        System.arraycopy(program, 0, memory, 0, program.length);
+        if (isOldFile(program)) {
+            System.arraycopy(program, 0, oldMemory, 0, program.length);
+        } else {
+            System.arraycopy(program, 0, newMemory, 0, program.length);
+        }
     }
 
     public void runProgram() {
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
 
         while (!isHalted && instructionPointer < 100) {
-            int instruction = memory[instructionPointer];
+            int instruction = memoryToUse[instructionPointer];
             int opcode = instruction / 100;
             int operand = instruction % 100;
 
@@ -83,36 +90,43 @@ public class UVSim {
 
     // I/O operation:
     void read(int location) {
-            try (Scanner scanner = new Scanner(System.in)) {
-				int value = scanner.nextInt();
-				memory[location] = value;
-			}
+        try (Scanner scanner = new Scanner(System.in)) {
+            int value = scanner.nextInt();
+            int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+            memoryToUse[location] = value;
+        }
     }
 
     void write(int location) {
-        System.out.println("Output: " + memory[location]);
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        System.out.println("Output: " + memoryToUse[location]);
     }
 
     // Load/store operations:
     void load(int location) {
-        accumulator = memory[location];
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        accumulator = memoryToUse[location];
     }
 
     void store(int location) {
-        memory[location] = accumulator;
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        memoryToUse[location] = accumulator;
     }
 
     // Arithmetic operations:
     void add(int location) {
-        accumulator += memory[location];
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        accumulator += memoryToUse[location];
     }
 
     void subtract(int location) {
-        accumulator -= memory[location];
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        accumulator -= memoryToUse[location];
     }
 
     void divide(int location) {
-        int value = memory[location];
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        int value = memoryToUse[location];
         if (value != 0) {
             accumulator /= value;
         } else {
@@ -122,7 +136,8 @@ public class UVSim {
     }
 
     void multiply(int location) {
-        accumulator *= memory[location];
+        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
+        accumulator *= memoryToUse[location];
     }
 
     // Control operations:
@@ -151,6 +166,16 @@ public class UVSim {
         isHalted = true;
     }
 
+    // Helper method to check if the given file is an "old" file (contains 4-digit instructions)
+    private boolean isOldFile(int[] program) {
+        for (int instruction : program) {
+            if (instruction >= 10000 || instruction < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // Read a program from a txt file
     int[] readProgramFromFile(File inputFile) throws FileNotFoundException {
         Scanner scanner = new Scanner(inputFile);
@@ -173,8 +198,12 @@ public class UVSim {
         return program;
     }
 
-    int[] getMemory() {
-        return memory;
+    int[] getOldMemory() {
+        return oldMemory;
+    }
+
+    int[] getNewMemory() {
+        return newMemory;
     }
 
     int getAccumulator() {
