@@ -12,13 +12,13 @@ public class UVSim {
 
     public UVSim() {
         oldMemory = new int[100];
-        newMemory = new int[100];
+        newMemory = new int[250];
         accumulator = 0;
         isHalted = false;
     }
 
     public void loadProgram(int[] program) {
-        if (program.length > 100) {
+        if (program.length > 250) {
             System.out.println("Program size exceeds memory limit.");
             return;
         }
@@ -39,40 +39,40 @@ public class UVSim {
             int operand = instruction % 100;
 
             switch (opcode) {
-                case 10:
+                case 010:
                     read(operand);
                     break;
-                case 11:
+                case 011:
                     write(operand);
                     break;
-                case 20:
+                case 020:
                     load(operand);
                     break;
-                case 21:
+                case 021:
                     store(operand);
                     break;
-                case 30:
+                case 030:
                     add(operand);
                     break;
-                case 31:
+                case 031:
                     subtract(operand);
                     break;
-                case 32:
+                case 032:
                     divide(operand);
                     break;
-                case 33:
+                case 033:
                     multiply(operand);
                     break;
-                case 40:
+                case 040:
                     branch(operand);
                     break;
-                case 41:
+                case 041:
                     branchNeg(operand);
                     break;
-                case 42:
+                case 042:
                     branchZero(operand);
                     break;
-                case 43:
+                case 043:
                     halt();
                     break;
                 default:
