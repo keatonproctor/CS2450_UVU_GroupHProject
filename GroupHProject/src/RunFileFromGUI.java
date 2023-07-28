@@ -2,9 +2,10 @@ import java.io.File;
 
 public class RunFileFromGUI {
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
         UVSim simInstance = new UVSim();
         FileReaderGUI guiWindow = new FileReaderGUI();
+        guiWindow.setSimulator(simInstance); // Set the simulator instance
         FileReaderGUI.runGUI();
 
         while (guiWindow.isFileNotInitialized()) {
