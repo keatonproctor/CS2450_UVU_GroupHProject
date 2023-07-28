@@ -12,7 +12,8 @@ import java.util.List;
 
 public class FileReaderGUI extends JFrame {
 
-    private JLabel fileLabel;
+    private static final long serialVersionUID = 1L;
+	private JLabel fileLabel;
     private JLabel validationStatusLabel;
     private JTextField patternTextField;
     private JTextField inputTextField;
@@ -322,23 +323,28 @@ public class FileReaderGUI extends JFrame {
     }
 
     private void executeProgram() {
-        List<Integer> program = new ArrayList<>();
-        for (int i = 0; i < commandListModel.size(); i++) {
-            String instruction = commandListModel.get(i);
-            try {
-                int value = Integer.parseInt(instruction);
-                program.add(value);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid instruction: " + instruction);
+        if (simulator != null) { // Check if simulator is initialized before using it
+            List<Integer> program = new ArrayList<>();
+            for (int i = 0; i < commandListModel.size(); i++) {
+                String instruction = commandListModel.get(i);
+                try {
+                    int value = Integer.parseInt(instruction);
+                    program.add(value);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid instruction: " + instruction);
+                }
             }
+
+            int[] programArray = new int[UVSim.HALT_INSTRUCTION];
+            for (int i = 0; i < program.size(); i++) {
+                programArray[i] = program.get(i);
+            }
+
+            simulator.loadProgram(programArray);
+            simulator.runProgram();
         }
-        int[] programArray = new int[UVSim.HALT_INSTRUCTION];
-        for (int i = 0; i < program.size(); i++) {
-            programArray[i] = program.get(i);
-        }
-        simulator.loadProgram(programArray);
-        simulator.runProgram();
     }
+
 
     public File getProgramFile() {
         return selectedFile;
