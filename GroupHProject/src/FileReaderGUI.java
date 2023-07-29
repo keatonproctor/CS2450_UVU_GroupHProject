@@ -45,8 +45,6 @@ public class FileReaderGUI extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
-	promptForColors();
         
         mainPanel = new JPanel(new BorderLayout());
 
@@ -213,8 +211,6 @@ public class FileReaderGUI extends JFrame {
         mainPanel.add(patternTextField, BorderLayout.SOUTH);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
-        applyColorScheme();
-
         setContentPane(mainPanel);
     }
 
@@ -244,6 +240,7 @@ public class FileReaderGUI extends JFrame {
             // User canceled, use default white color
             offColor = Color.decode("#FFFFFF");
         }
+	applyColorScheme();
     }
 
     private boolean validateFile(File file) {
@@ -403,6 +400,7 @@ public class FileReaderGUI extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 FileReaderGUI app = new FileReaderGUI();
+		app.promptForColors();
                 app.setVisible(true);
             }
         });
