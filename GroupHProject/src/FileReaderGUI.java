@@ -28,8 +28,6 @@ public class FileReaderGUI extends JFrame {
     private boolean bValidate = false;
     private File selectedFile;
     private boolean fileNotInitialized = true;
-    private Color primaryColor;
-    private Color offColor;
     private JPanel mainPanel;
     private JPanel buttonPanel;
     private JPanel validationPanel;
@@ -39,23 +37,15 @@ public class FileReaderGUI extends JFrame {
     private JPanel commandButtonPanel;
     private JPanel bottomPanel;
 
-    private static final Color UVU_DARK_GREEN = new Color(76, 114, 29);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color PURPLE = new Color(128, 0, 128);
-
-    private static final ColorScheme[] COLOR_SCHEMES = {
-            new ColorScheme("UVU", UVU_DARK_GREEN, WHITE),
-            new ColorScheme("Red", Color.RED, WHITE),
-            new ColorScheme("Blue", Color.BLUE, WHITE),
-            new ColorScheme("Purple", PURPLE, WHITE),
-    };
+    private Color primaryColor = Color.decode("#4C721D"); // Default primary color: UVU green
+    private Color offColor = Color.decode("#FFFFFF"); // Default off-color: White
 
     public FileReaderGUI() {
         setTitle("UV Sim");
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
+        
         mainPanel = new JPanel(new BorderLayout());
 
         fileLabel = new JLabel();
@@ -224,6 +214,35 @@ public class FileReaderGUI extends JFrame {
         setContentPane(mainPanel);
     }
 
+    private void promptForColors() {
+        String primaryColorHex = JOptionPane.showInputDialog(this, "Enter the Primary Color (in Hex format, e.g., #4C721D):");
+        if (primaryColorHex != null) {
+            try {
+                primaryColor = Color.decode(primaryColorHex);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid Hex format for Primary Color. Using default green color.", "Error", JOptionPane.ERROR_MESSAGE);
+                primaryColor = Color.decode("#4C721D");
+            }
+        } else {
+            // User canceled, use default green color
+            primaryColor = Color.decode("#4C721D");
+        }
+
+        String offColorHex = JOptionPane.showInputDialog(this, "Enter the Off-Color (in Hex format, e.g., #FFFFFF):");
+        if (offColorHex != null) {
+            try {
+                offColor = Color.decode(offColorHex);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid Hex format for Off-Color. Using default white color.", "Error", JOptionPane.ERROR_MESSAGE);
+                offColor = Color.decode("#FFFFFF");
+            }
+        } else {
+            // User canceled, use default white color
+            offColor = Color.decode("#FFFFFF");
+        }
+	applyColorScheme();
+    }
+
     private boolean validateFile(File file) {
         boolean isValidFile = true;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -323,6 +342,7 @@ public class FileReaderGUI extends JFrame {
     }
 
     private void executeProgram() {
+    	UVSim simulator = new UVSim();
         if (simulator != null) { // Check if simulator is initialized before using it
             List<Integer> program = new ArrayList<>();
             for (int i = 0; i < commandListModel.size(); i++) {
@@ -343,6 +363,7 @@ public class FileReaderGUI extends JFrame {
             simulator.loadProgram(programArray);
             simulator.runProgram();
         }
+        
     }
 
 
@@ -354,7 +375,9 @@ public class FileReaderGUI extends JFrame {
         return fileNotInitialized;
     }
 
-    private void updateColorScheme(Color primaryColor, Color offColor) {
+    
+
+    private void applyColorScheme() {
         mainPanel.setBackground(primaryColor);
         buttonPanel.setBackground(primaryColor);
         validationPanel.setBackground(primaryColor);
@@ -363,62 +386,21 @@ public class FileReaderGUI extends JFrame {
         commandPanel.setBackground(primaryColor);
         commandButtonPanel.setBackground(primaryColor);
         bottomPanel.setBackground(primaryColor);
-
+        patternTextField.setBackground(offColor);
+        inputTextField.setBackground(offColor);
+        commandTextArea.setBackground(offColor);
+        runButton.setBackground(offColor);
         addButton.setBackground(offColor);
         modifyButton.setBackground(offColor);
         deleteButton.setBackground(offColor);
-        runButton.setBackground(offColor);
-        fileLabel.setForeground(offColor);
-        validationStatusLabel.setForeground(offColor);
-        inputTextField.setBackground(offColor);
         commandList.setBackground(offColor);
-        commandTextArea.setBackground(offColor);
-    }
-
-    private void applyColorScheme(ColorScheme colorScheme) {
-        primaryColor = colorScheme.getPrimaryColor();
-        offColor = colorScheme.getOffColor();
-        updateColorScheme(primaryColor, offColor);
-    }
-
-    private void createColorSchemeMenu(JMenu menu) {
-        ButtonGroup group = new ButtonGroup();
-        ActionListener listener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String command = e.getActionCommand();
-                int index = Integer.parseInt(command);
-                applyColorScheme(COLOR_SCHEMES[index]);
-            }
-        };
-        for (int i = 0; i < COLOR_SCHEMES.length; i++) {
-            JRadioButtonMenuItem item = new JRadioButtonMenuItem(COLOR_SCHEMES[i].getName());
-            item.setActionCommand(String.valueOf(i));
-            item.addActionListener(listener);
-            group.add(item);
-            menu.add(item);
-            if (COLOR_SCHEMES[i].getName().equals("UVU")) {
-                item.setSelected(true);
-                applyColorScheme(COLOR_SCHEMES[i]);
-            }
-        }
-    }
-
-    private void createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        JMenu optionsMenu = new JMenu("Options");
-        JMenu colorSchemeMenu = new JMenu("Color Scheme");
-        createColorSchemeMenu(colorSchemeMenu);
-        optionsMenu.add(colorSchemeMenu);
-        menuBar.add(optionsMenu);
-        setJMenuBar(menuBar);
     }
 
     public static void runGUI() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 FileReaderGUI app = new FileReaderGUI();
-                app.createMenuBar();
+		app.promptForColors();
                 app.setVisible(true);
             }
         });
@@ -429,29 +411,6 @@ public class FileReaderGUI extends JFrame {
         FileReaderGUI gui = new FileReaderGUI();
         gui.setSimulator(simulator);
         FileReaderGUI.runGUI();
-    }
-}
-
-class ColorScheme {
-    private String name;
-    private Color primaryColor;
-    private Color offColor;
-
-    public ColorScheme(String name, Color primaryColor, Color offColor) {
-        this.name = name;
-        this.primaryColor = primaryColor;
-        this.offColor = offColor;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Color getPrimaryColor() {
-        return primaryColor;
-    }
-
-    public Color getOffColor() {
-        return offColor;
-    }
+    }    
+    
 }
