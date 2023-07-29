@@ -46,7 +46,7 @@ public class FileReaderGUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        promptForColors();
+//        promptForColors();
         
         mainPanel = new JPanel(new BorderLayout());
 
@@ -345,6 +345,7 @@ public class FileReaderGUI extends JFrame {
     }
 
     private void executeProgram() {
+    	UVSim simulator = new UVSim();
         if (simulator != null) { // Check if simulator is initialized before using it
             List<Integer> program = new ArrayList<>();
             for (int i = 0; i < commandListModel.size(); i++) {
@@ -365,6 +366,7 @@ public class FileReaderGUI extends JFrame {
             simulator.loadProgram(programArray);
             simulator.runProgram();
         }
+        
     }
 
 
