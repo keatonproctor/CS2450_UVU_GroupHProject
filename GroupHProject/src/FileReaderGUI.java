@@ -46,7 +46,7 @@ public class FileReaderGUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-//        promptForColors();
+	promptForColors();
         
         mainPanel = new JPanel(new BorderLayout());
 
