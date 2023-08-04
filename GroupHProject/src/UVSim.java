@@ -4,75 +4,80 @@ import java.util.Scanner;
 
 public class UVSim {
     public static final int HALT_INSTRUCTION = 43;
-    private int[] oldMemory; // For 4-digit instructions
-    private int[] newMemory; // For 6-digit instructions
+    private int[] memory;
     private int accumulator;
     private boolean isHalted;
     private int instructionPointer = 0;
 
     public UVSim() {
-        oldMemory = new int[100];
-        newMemory = new int[250];
+        memory = new int[100];
         accumulator = 0;
         isHalted = false;
     }
 
     public void loadProgram(int[] program) {
-        if (program.length > 250) {
+        if (program.length > 100) {
             System.out.println("Program size exceeds memory limit.");
             return;
         }
 
-        if (isOldFile(program)) {
-            System.arraycopy(program, 0, oldMemory, 0, program.length);
-        } else {
-            System.arraycopy(program, 0, newMemory, 0, program.length);
+        int[] memoryCopy = new int[100];
+        System.arraycopy(program, 0, memoryCopy, 0, program.length);
+
+        // Normalize the instructions to 6-digit format
+        for (int i = 0; i < memoryCopy.length; i++) {
+            int instruction = memoryCopy[i];
+            int opcode = instruction / 100;
+            int operand = instruction % 100;
+
+            memoryCopy[i] = (opcode * 100) + operand;
         }
+
+        // Load the normalized program into memory
+        System.arraycopy(memoryCopy, 0, memory, 0, memoryCopy.length);
     }
 
     public void runProgram() {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-
         while (!isHalted && instructionPointer < 100) {
-            int instruction = memoryToUse[instructionPointer];
+            int instruction = memory[instructionPointer];
             int opcode = instruction / 100;
             int operand = instruction % 100;
 
             switch (opcode) {
-                case 010:
+                case 10:
                     read(operand);
                     break;
-                case 011:
+                case 11:
                     write(operand);
                     break;
-                case 020:
+                case 20:
                     load(operand);
                     break;
-                case 021:
+                case 21:
                     store(operand);
                     break;
-                case 030:
+                case 30:
                     add(operand);
                     break;
-                case 031:
+                case 31:
                     subtract(operand);
                     break;
-                case 032:
+                case 32:
                     divide(operand);
                     break;
-                case 033:
+                case 33:
                     multiply(operand);
                     break;
-                case 040:
+                case 40:
                     branch(operand);
                     break;
-                case 041:
+                case 41:
                     branchNeg(operand);
                     break;
-                case 042:
+                case 42:
                     branchZero(operand);
                     break;
-                case 043:
+                case 43:
                     halt();
                     break;
                 default:
@@ -92,41 +97,34 @@ public class UVSim {
     void read(int location) {
         try (Scanner scanner = new Scanner(System.in)) {
             int value = scanner.nextInt();
-            int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-            memoryToUse[location] = value;
+            memory[location] = value;
         }
     }
 
     void write(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        System.out.println("Output: " + memoryToUse[location]);
+        System.out.println("Output: " + memory[location]);
     }
 
     // Load/store operations:
     void load(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        accumulator = memoryToUse[location];
+        accumulator = memory[location];
     }
 
     void store(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        memoryToUse[location] = accumulator;
+        memory[location] = accumulator;
     }
 
     // Arithmetic operations:
     void add(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        accumulator += memoryToUse[location];
+        accumulator += memory[location];
     }
 
     void subtract(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        accumulator -= memoryToUse[location];
+        accumulator -= memory[location];
     }
 
     void divide(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        int value = memoryToUse[location];
+        int value = memory[location];
         if (value != 0) {
             accumulator /= value;
         } else {
@@ -136,8 +134,7 @@ public class UVSim {
     }
 
     void multiply(int location) {
-        int[] memoryToUse = isOldFile(oldMemory) ? oldMemory : newMemory;
-        accumulator *= memoryToUse[location];
+        accumulator *= memory[location];
     }
 
     // Control operations:
@@ -166,16 +163,6 @@ public class UVSim {
         isHalted = true;
     }
 
-    // Helper method to check if the given file is an "old" file (contains 4-digit instructions)
-    private boolean isOldFile(int[] program) {
-        for (int instruction : program) {
-            if (instruction >= 10000 || instruction < 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     // Read a program from a txt file
     int[] readProgramFromFile(File inputFile) throws FileNotFoundException {
         Scanner scanner = new Scanner(inputFile);
@@ -198,12 +185,8 @@ public class UVSim {
         return program;
     }
 
-    int[] getOldMemory() {
-        return oldMemory;
-    }
-
-    int[] getNewMemory() {
-        return newMemory;
+    int[] getMemory() {
+        return memory;
     }
 
     int getAccumulator() {
@@ -220,5 +203,9 @@ public class UVSim {
 
     int getProgramCounter() {
         return instructionPointer;
+    }
+
+    public static void main(String[] args) {
+        // UVSim main method (You can use UVSimRunner.java to run the GUI version of the program)
     }
 }
