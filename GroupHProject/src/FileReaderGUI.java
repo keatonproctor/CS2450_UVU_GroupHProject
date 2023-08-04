@@ -342,8 +342,7 @@ public class FileReaderGUI extends JFrame {
     }
 
     private void executeProgram() {
-    	UVSim simulator = new UVSim();
-        if (simulator != null) { // Check if simulator is initialized before using it
+        if (simulator != null) {
             List<Integer> program = new ArrayList<>();
             for (int i = 0; i < commandListModel.size(); i++) {
                 String instruction = commandListModel.get(i);
@@ -361,10 +360,47 @@ public class FileReaderGUI extends JFrame {
             }
 
             simulator.loadProgram(programArray);
-            simulator.runProgram();
+
+            // Redirect the standard output to a StringWriter
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+            PrintStream originalOut = System.out;
+            System.setOut(new PrintStream(new OutputStream() {
+                @Override
+                public void write(int b) {
+                    printWriter.write(b);
+                }
+            }));
+
+            // Execute the program
+            try {
+                simulator.runProgram();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Restore the standard output
+            System.setOut(originalOut);
+
+            // Get the results from StringWriter and display in the GUI
+            String output = stringWriter.toString();
+            commandTextArea.setText(output);
         }
-        
     }
+
+
+
+    private String getFormattedMemory(int[] memory) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < memory.length; i++) {
+            sb.append(String.format("%+05d ", memory[i]));
+            if (i > 0 && i % 10 == 9) {
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
 
 
     public File getProgramFile() {
